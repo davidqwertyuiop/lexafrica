@@ -18,6 +18,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api";
 export default function CaseLibrary() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
+  const [selectedDifficulty, setSelectedDifficulty] = useState<string[]>([]);
   const [cases, setCases] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -27,8 +28,10 @@ export default function CaseLibrary() {
       let url = `${API_URL}/cases?`;
       if (searchQuery) url += `q=${encodeURIComponent(searchQuery)}&`;
       if (selectedTopics.length > 0) {
-        // Simple logic for single topic filter based on current API
-        url += `topic=${encodeURIComponent(selectedTopics[0])}`;
+        url += `law_category=${encodeURIComponent(selectedTopics[0])}&`;
+      }
+      if (selectedDifficulty.length > 0) {
+        url += `difficulty=${encodeURIComponent(selectedDifficulty[0])}&`;
       }
       
       const response = await fetch(url);
@@ -51,7 +54,7 @@ export default function CaseLibrary() {
       fetchCases();
     }, 300);
     return () => clearTimeout(debounce);
-  }, [searchQuery, selectedTopics]);
+  }, [searchQuery, selectedTopics, selectedDifficulty]);
 
   const toggleTopic = (topic: string) => {
     setSelectedTopics(prev => 
@@ -90,25 +93,79 @@ export default function CaseLibrary() {
               <Filter className="w-4 h-4 text-blue-600" /> Filters
             </h3>
             
-            <div className="space-y-4">
+            <div className="space-y-5">
               <div>
-                <label className="text-sm font-medium mb-2 block text-muted-foreground">Subject</label>
-                <div className="space-y-2">
-                  {["Criminal Law", "Tort Law", "Contract Law", "Constitutional"].map(subj => (
+                <label className="text-sm font-medium mb-2 block text-muted-foreground uppercase tracking-wide">Area of Law</label>
+                <div className="space-y-1.5">
+                  {[
+                    "Constitutional Law",
+                    "Criminal Law",
+                    "Law of Contract",
+                    "Law of Tort",
+                    "Land Law",
+                    "Administrative Law",
+                    "Family Law",
+                    "Company Law",
+                    "Commercial Law",
+                    "Law of Evidence",
+                    "Equity and Trusts",
+                    "International Law",
+                    "Islamic/Sharia Law",
+                    "Legal Methods",
+                    "Jurisprudence",
+                  ].map(subj => (
                     <label key={subj} className="flex items-center gap-2 text-sm cursor-pointer group">
                       <input 
                         type="checkbox" 
                         checked={selectedTopics.includes(subj)}
                         onChange={() => toggleTopic(subj)}
-                        className="rounded border-neutral-300 text-blue-600 focus:ring-blue-600" 
+                        className="rounded border-neutral-300 text-blue-600 focus:ring-blue-600 accent-blue-600" 
                       />
-                      <span className={selectedTopics.includes(subj) ? "text-blue-600 font-medium" : ""}>
+                      <span className={selectedTopics.includes(subj) ? "text-blue-600 font-medium" : "text-neutral-700 dark:text-neutral-300"}>
                         {subj}
                       </span>
                     </label>
                   ))}
                 </div>
               </div>
+
+              <div>
+                <label className="text-sm font-medium mb-2 block text-muted-foreground uppercase tracking-wide">Difficulty</label>
+                <div className="space-y-1.5">
+                  {["Beginner", "Intermediate", "Advanced"].map(level => (
+                    <label key={level} className="flex items-center gap-2 text-sm cursor-pointer">
+                      <input 
+                        type="checkbox"
+                        checked={selectedDifficulty.includes(level)}
+                        onChange={() => setSelectedDifficulty(prev => prev.includes(level) ? prev.filter(d => d !== level) : [...prev, level])}
+                        className="rounded border-neutral-300 accent-blue-600"
+                      />
+                      <span className={`${level === 'Beginner' ? 'text-green-600' : level === 'Advanced' ? 'text-red-500' : 'text-amber-600'}`}>{level}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium mb-2 block text-muted-foreground uppercase tracking-wide">Jurisdiction</label>
+                <div className="space-y-1.5">
+                  {["Nigeria", "UK (Applied in Nigeria)", "International"].map(j => (
+                    <label key={j} className="flex items-center gap-2 text-sm cursor-pointer">
+                      <input type="checkbox" className="rounded border-neutral-300 accent-blue-600" />
+                      <span className="text-neutral-700 dark:text-neutral-300">{j}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {(selectedTopics.length > 0 || selectedDifficulty.length > 0) && (
+                <button
+                  onClick={() => { setSelectedTopics([]); setSelectedDifficulty([]); }}
+                  className="w-full text-sm text-blue-600 hover:underline text-left"
+                >
+                  Clear all filters
+                </button>
+              )}
             </div>
           </div>
         </aside>
