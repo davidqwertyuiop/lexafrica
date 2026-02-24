@@ -34,6 +34,10 @@ async fn main() {
         .await
         .expect("Failed to connect for migrations");
 
+    // Clear any existing prepared statements that might have been left by a proxy/pooler
+    // This is a common workaround for "prepared statement already exists" in PgBouncer (Transaction mode)
+    let _ = sqlx::query("DEALLOCATE ALL").execute(&mut conn).await;
+
     sqlx::migrate!("../supabase/migrations")
         .run(&mut conn)
         .await
