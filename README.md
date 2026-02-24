@@ -22,7 +22,7 @@ LexAfrica is an AI-powered legal learning platform designed for Nigerian and Afr
 Create a database named `lexafrica` and run the initial migration:
 
 ```bash
-psql -d lexafrica -f database/migrations/001_initial_schema.sql
+psql -d lexafrica -f supabase/migrations/20240101000000_init.sql
 ```
 
 ### 2. Backend Setup
@@ -63,8 +63,29 @@ Open [http://localhost:3000](http://localhost:3000) to view the application.
 
 The backend includes an automatic AI summarization worker that runs in the background. It polls the database for new cases and uses the Gemini API to generate legal summaries.
 
+## Database Management (Supabase CLI)
+
+We use the Supabase CLI for managing migrations and seeding data.
+
+### 1. Login and Link Project
+
+```bash
+npx supabase login
+npx supabase link --project-ref [your-project-ref]
+```
+
+### 2. Apply Migrations
+
+```bash
+npx supabase db push
+```
+
+### 3. Seed Data
+
+```bash
+npx supabase db reset # This will apply migrations and seed data
+```
+
 ## License
 
 ISC
-# lexafrica
-# lexafrica
