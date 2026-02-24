@@ -8,6 +8,10 @@ ALTER TABLE cases ADD COLUMN IF NOT EXISTS jurisdiction TEXT DEFAULT 'Nigeria';
 ALTER TABLE cases ADD COLUMN IF NOT EXISTS tags TEXT[] DEFAULT '{}';
 ALTER TABLE cases ADD COLUMN IF NOT EXISTS excerpt TEXT;
 
+-- Add unique constraint on citation if it doesn't exist
+ALTER TABLE cases DROP CONSTRAINT IF EXISTS cases_citation_key;
+ALTER TABLE cases ADD CONSTRAINT cases_citation_key UNIQUE (citation);
+
 -- Nigerian law categories reference table
 CREATE TABLE IF NOT EXISTS law_categories (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
