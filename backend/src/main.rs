@@ -35,8 +35,6 @@ async fn main() {
         .expect("Failed to connect for migrations");
 
     // Clear any existing prepared statements that might have been left by a proxy/pooler
-    // This is a common workaround for "prepared statement already exists" in PgBouncer (Transaction mode)
-    let _ = sqlx::query("DEALLOCATE ALL").execute(&mut conn).await;
 
     sqlx::migrate!("../supabase/migrations")
         .run(&mut conn)
@@ -48,6 +46,12 @@ async fn main() {
 
     let pool = PgPoolOptions::new()
         .max_connections(5)
+        .after_connect(|conn, _meta| {
+            Box::pin(async move {
+                sqlx::query("DEALLOCATE ALL").execute(conn).await?;
+                Ok(())
+            })
+        })
         .connect_with(connection_options)
         .await
         .expect("could not connect to database");

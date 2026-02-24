@@ -46,9 +46,12 @@ pub async fn start_summarization_worker(state: AppState) {
                     }
                     Err(e) => {
                         eprintln!("AI Summarization failed for case {}: {}", id, e);
-                        // Optional: Add logic here to retry or mark this case as failed
-                        // so we don't infinitely retry the same failing case
-                        // e.g., UPDATE cases SET summary = 'ERROR' WHERE id = $case.id;
+                        let _ = sqlx::query(
+                            "UPDATE cases SET summary = 'ERROR: Summarization failed', updated_at = CURRENT_TIMESTAMP WHERE id = $1"
+                         )
+                         .bind(id)
+                         .execute(&state.db)
+                         .await;
                     }
                 }
             }
