@@ -5,7 +5,6 @@ mod services;
 mod workers;
 use axum::http::{Method, header};
 use axum::{Router, routing::get};
-use sqlx::Connection;
 use sqlx::postgres::{PgConnectOptions, PgPoolOptions};
 use std::env;
 use std::net::SocketAddr;
@@ -23,31 +22,13 @@ async fn main() {
         .expect("Invalid DATABASE_URL")
         .statement_cache_capacity(0);
 
-    println!("Running database migrations...");
-    let mut conn = sqlx::postgres::PgConnection::connect_with(&connection_options)
-        .await
-        .expect("Failed to connect for migrations");
-
-    // Run DEALLOCATE ALL as a plain statement
-    let _ = sqlx::query("DEALLOCATE ALL").execute(&mut conn).await;
-
-    sqlx::migrate!("../supabase/migrations")
-        .set_locking(false)
-        .run(&mut conn)
-        .await
-        .expect("Failed to run migrations");
-
-    drop(conn);
-
-    // statement_cache_capacity(0) on the pool options means no prepared statements
-    // will be cached, so no DEALLOCATE ALL needed in after_connect
+    println!("Connecting to database...");
     let pool = PgPoolOptions::new()
         .max_connections(5)
         .connect_with(connection_options)
         .await
         .expect("could not connect to database");
-
-    println!("Database migrations completed successfully.");
+    println!("Database connected successfully.");
 
     let state = models::db::AppState { db: pool };
 
