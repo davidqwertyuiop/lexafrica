@@ -1,13 +1,9 @@
 import { Inter } from "next/font/google";
 import "./globals.css";
+import LexaChat from "@/components/LexaChat";
 
 const inter = Inter({ subsets: ["latin"] });
-
-export const metadata = {
-  title: "LexAfrica - African Legal Learning Platform",
-  description: "AI-powered legal education for Nigerian and African law students",
-};
-
+/* ... metadata ... */
 export default function RootLayout({
   children,
 }: {
@@ -17,6 +13,7 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <body className={`${inter.className} min-h-screen bg-background antialiased selection:bg-primary selection:text-primary-foreground`}>
         {children}
+        <LexaChat />
       </body>
     </html>
   );

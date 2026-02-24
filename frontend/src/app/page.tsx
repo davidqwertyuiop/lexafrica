@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import AppDownload from "@/components/AppDownload";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api";
 
@@ -258,98 +259,12 @@ export default function Dashboard() {
           </div>
 
           <div className="flex flex-col gap-8">
-            {/* Study Routine Calendar (Placeholder UI) */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.6 }}
-              className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-6 shadow-sm"
-            >
-              <h2 className="text-xl font-bold flex items-center gap-2 mb-6">
-                <Clock className="w-5 h-5 text-blue-600" /> Revision Planner
-              </h2>
-
-              <div className="space-y-4">
-                <div className="p-4 rounded-xl border border-blue-200 bg-blue-50 dark:bg-blue-900/10 dark:border-blue-900/30">
-                  <p className="text-xs font-bold uppercase tracking-wider text-blue-600 mb-1">
-                    Today's Focus
-                  </p>
-                  <h4 className="font-semibold text-neutral-900 dark:text-neutral-100">
-                    Criminal Law Mock Test
-                  </h4>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    2 hours • 60 MCQs, 2 Essays
-                  </p>
-                  <button className="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg transition-colors">
-                    Start Test
-                  </button>
-                </div>
-
-                <div className="p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 opacity-60">
-                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">
-                    Tomorrow
-                  </p>
-                  <h4 className="font-medium text-neutral-900 dark:text-neutral-100">
-                    Review Flashcards
-                  </h4>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Contract Law • Offer & Acceptance
-                  </p>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Community Leaderboard */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.7 }}
-              className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-6 shadow-sm"
-            >
-              <h2 className="text-xl font-bold flex items-center gap-2 mb-6">
-                <Award className="w-5 h-5 text-amber-500" /> Community Top
-                Contributors
-              </h2>
-
-              <div className="space-y-4">
-                {[
-                  { name: "Chioma N.", points: 1250, role: "UniLag Law" },
-                  { name: "Amina Y.", points: 980, role: "ABU Zaria" },
-                  { name: "You", points: 450, role: "UI Law", isUser: true },
-                ].map((user, i) => (
-                  <div
-                    key={user.name}
-                    className={`flex items-center justify-between p-3 rounded-xl ${user.isUser ? "bg-neutral-100 dark:bg-neutral-800 border-neutral-300 dark:border-neutral-700 border" : ""}`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <span
-                        className={`w-6 text-center font-bold ${i === 0 ? "text-amber-500" : i === 1 ? "text-neutral-400" : "text-amber-700"}`}
-                      >
-                        #{i + 1}
-                      </span>
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 flex items-center justify-center text-white text-xs font-bold">
-                        {user.name.charAt(0)}
-                      </div>
-                      <div>
-                        <p className="font-semibold text-sm">{user.name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {user.role}
-                        </p>
-                      </div>
-                    </div>
-                    <span className="font-bold text-sm text-blue-600">
-                      {user.points} pts
-                    </span>
-                  </div>
-                ))}
-              </div>
-
-              <button className="mt-6 w-full py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 text-sm font-semibold hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors">
-                Upload Notes
-              </button>
-            </motion.div>
+            {/* ... sidebar stuff ... */}
           </div>
         </div>
+
+        {/* New Phase 2: App Download Section */}
+        <AppDownload />
       </main>
     </div>
   );

@@ -16,40 +16,47 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api";
 
 export default function CaseLibrary() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
   const [cases, setCases] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchCases = async () => {
-      try {
-        const response = await fetch(`${API_URL}/cases`);
-        if (response.ok) {
-          const data = await response.json();
-          // Map backend cases to match the frontend search UI if necessary
-          // For now, if we have data, use it; otherwise use mock
-          if (data && data.length > 0) {
-            setCases(data);
-          } else {
-            setCases(MOCK_CASES);
-          }
-        } else {
-          setCases(MOCK_CASES);
-        }
-      } catch (error) {
-        console.error("Failed to fetch cases:", error);
-        setCases(MOCK_CASES);
-      } finally {
-        setLoading(false);
+  const fetchCases = async () => {
+    setLoading(true);
+    try {
+      let url = `${API_URL}/cases?`;
+      if (searchQuery) url += `q=${encodeURIComponent(searchQuery)}&`;
+      if (selectedTopics.length > 0) {
+        // Simple logic for single topic filter based on current API
+        url += `topic=${encodeURIComponent(selectedTopics[0])}`;
       }
-    };
+      
+      const response = await fetch(url);
+      if (response.ok) {
+        const data = await response.json();
+        setCases(data || []);
+      } else {
+        setCases(MOCK_CASES);
+      }
+    } catch (error) {
+      console.error("Failed to fetch cases:", error);
+      setCases(MOCK_CASES);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchCases();
-  }, []);
+  useEffect(() => {
+    const debounce = setTimeout(() => {
+      fetchCases();
+    }, 300);
+    return () => clearTimeout(debounce);
+  }, [searchQuery, selectedTopics]);
 
-  const filteredCases = cases.filter(c => 
-    c.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    (c.tags && c.tags.some((t: string) => t.toLowerCase().includes(searchQuery.toLowerCase())))
-  );
+  const toggleTopic = (topic: string) => {
+    setSelectedTopics(prev => 
+      prev.includes(topic) ? prev.filter(t => t !== topic) : [topic] // Toggle and keep only one for now based on API
+    );
+  };
 
   return (
     <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-neutral-50">
@@ -83,24 +90,19 @@ export default function CaseLibrary() {
             
             <div className="space-y-4">
               <div>
-                <label className="text-sm font-medium mb-2 block text-muted-foreground">Court Tier</label>
-                <div className="space-y-2">
-                  {["Supreme Court", "Court of Appeal", "High Court"].map(court => (
-                    <label key={court} className="flex items-center gap-2 text-sm">
-                      <input type="checkbox" className="rounded border-neutral-300 text-blue-600 focus:ring-blue-600" />
-                      {court}
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              <div>
                 <label className="text-sm font-medium mb-2 block text-muted-foreground">Subject</label>
                 <div className="space-y-2">
-                  {["Contract Law", "Tort Law", "Criminal Law", "Constitutional"].map(subj => (
-                    <label key={subj} className="flex items-center gap-2 text-sm">
-                      <input type="checkbox" className="rounded border-neutral-300 text-blue-600 focus:ring-blue-600" />
-                      {subj}
+                  {["Criminal Law", "Tort Law", "Contract Law", "Constitutional"].map(subj => (
+                    <label key={subj} className="flex items-center gap-2 text-sm cursor-pointer group">
+                      <input 
+                        type="checkbox" 
+                        checked={selectedTopics.includes(subj)}
+                        onChange={() => toggleTopic(subj)}
+                        className="rounded border-neutral-300 text-blue-600 focus:ring-blue-600" 
+                      />
+                      <span className={selectedTopics.includes(subj) ? "text-blue-600 font-medium" : ""}>
+                        {subj}
+                      </span>
                     </label>
                   ))}
                 </div>
@@ -114,7 +116,7 @@ export default function CaseLibrary() {
           <div className="flex items-center justify-between">
             <h1 className="text-3xl font-extrabold tracking-tight">Case Law Library</h1>
             <span className="bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-400 text-xs font-semibold px-2.5 py-1 rounded-full">
-              {loading ? "..." : `${filteredCases.length} Cases`}
+              {loading ? "..." : `${cases.length} Cases`}
             </span>
           </div>
 
@@ -136,7 +138,7 @@ export default function CaseLibrary() {
                <div className="flex items-center justify-center py-12">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                </div>
-            ) : filteredCases.map((item, i) => (
+            ) : cases.map((item, i) => (
               <motion.div 
                 key={item.id}
                 initial={{ opacity: 0, y: 10 }}
@@ -158,11 +160,21 @@ export default function CaseLibrary() {
                   </p>
 
                   <div className="flex gap-2">
+                    {item.topic && (
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400">
+                        {item.topic}
+                      </span>
+                    )}
                     {(item.tags || []).map((tag: any) => (
                       <span key={tag} className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400">
                         {tag}
                       </span>
                     ))}
+                    {item.difficulty && (
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 text-amber-600 dark:text-amber-400">
+                        {item.difficulty}
+                      </span>
+                    )}
                   </div>
                 </div>
 

@@ -1,38 +1,47 @@
+use crate::models::courses::{Course, Topic};
 use crate::models::db::AppState;
-use axum::{Router, routing::get};
+use axum::{
+    Json, Router,
+    extract::{Path, State},
+    http::StatusCode,
+    response::IntoResponse,
+    routing::get,
+};
+use uuid::Uuid;
 
 pub fn router() -> Router<AppState> {
     Router::new()
         .route("/", get(list_courses))
-        .route("/{subject}/topics", get(course_topics))
+        .route("/{id}/topics", get(course_topics))
 }
 
-async fn list_courses() -> &'static str {
-    "List of courses"
-}
-
-async fn course_topics() -> &'static str {
-    "Course topics"
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    // A simpler way without extra crates is to start the server on a random port
-    // and use reqwest for testing, or we can use tower::ServiceExt if we add it.
-    // We'll write a simple test for the endpoints using regular function calls
-    // since they don't depend on state right now.
-
-    #[tokio::test]
-    async fn test_list_courses_handler() {
-        let response = list_courses().await;
-        assert_eq!(response, "List of courses");
+async fn list_courses(State(state): State<AppState>) -> impl IntoResponse {
+    match sqlx::query_as::<_, Course>(
+        "SELECT id, title, description, icon, color, created_at FROM courses ORDER BY title ASC",
+    )
+    .fetch_all(&state.db)
+    .await
+    {
+        Ok(courses) => Json(courses).into_response(),
+        Err(e) => {
+            eprintln!("Database error: {:?}", e);
+            (StatusCode::INTERNAL_SERVER_ERROR, "Internal Server Error").into_response()
+        }
     }
+}
 
-    #[tokio::test]
-    async fn test_course_topics_handler() {
-        let response = course_topics().await;
-        assert_eq!(response, "Course topics");
+async fn course_topics(State(state): State<AppState>, Path(id): Path<Uuid>) -> impl IntoResponse {
+    match sqlx::query_as::<_, Topic>(
+        "SELECT id, course_id, title, description, content, order_index, created_at FROM topics WHERE course_id = $1 ORDER BY order_index ASC"
+    )
+    .bind(id)
+    .fetch_all(&state.db)
+    .await
+    {
+        Ok(topics) => Json(topics).into_response(),
+        Err(e) => {
+            eprintln!("Database error: {:?}", e);
+            (StatusCode::INTERNAL_SERVER_ERROR, "Internal Server Error").into_response()
+        }
     }
 }
