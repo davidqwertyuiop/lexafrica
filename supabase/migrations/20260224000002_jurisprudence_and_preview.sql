@@ -15,7 +15,7 @@ INSERT INTO cases (title, citation, court, year, topic, law_category, jurisdicti
     'UK (Applied in Nigeria)',
     'advanced',
     true,
-    'Historic case where the House of Lords abolished the martial rape immunity — a judge-made rule that stated a husband could not rape his wife. Demonstrates how law evolves with changing moral standards.',
+    'Historic case where the House of Lords abolished the marital rape immunity — a judge-made rule that stated a husband could not rape his wife. Demonstrates how law evolves with changing moral standards.',
     'Lord Keith held that the common law of England was capable of evolving in the light of changing social, economic and cultural developments. The historic fiction that a wife had given irrevocable consent to intercourse on marriage was outmoded. This case is central to jurisprudential debates about: (1) Whether judges make law or merely declare it; (2) The relationship between law and morality; (3) Natural law vs Legal positivism — positivists like Austin and Hart would see this as judges creating new law, while natural lawyers would say the court was recognizing pre-existing moral truth. R v R is frequently cited in discussions of HLA Hart vs Lon Fuller debate on law and morality.',
     ARRAY['Jurisprudence', 'Law and Morality', 'Judicial Law-Making', 'Natural Law', 'Legal Positivism']
 ),
@@ -35,7 +35,7 @@ INSERT INTO cases (title, citation, court, year, topic, law_category, jurisdicti
 ),
 (
     'Donoghue v Stevenson (Jurisprudential Reading)',
-    '[1932] AC 562',
+    '[1932] AC 562 (Jurisprudence)',
     'House of Lords',
     1932,
     'Judicial Reasoning',
@@ -62,7 +62,7 @@ INSERT INTO cases (title, citation, court, year, topic, law_category, jurisdicti
     ARRAY['Jurisprudence', 'Statutory Interpretation', 'Literal Rule', 'Mischief Rule', 'Hart']
 ),
 (
-    'Rv Dudley and Stephens',
+    'R v Dudley and Stephens',
     '(1884) 14 QBD 273',
     'Queen''s Bench Division',
     1884,
@@ -71,10 +71,11 @@ INSERT INTO cases (title, citation, court, year, topic, law_category, jurisdicti
     'UK (Academic)',
     'advanced',
     true,
-    'Survivors of a shipwreck killed and ate a cabin boy to survive. Were they guilty of murder? The case has been used to explore the limits of necessity as a defence and the relationship between law, morality, and survival.',
+    'Survivors of a shipwreck killed and ate a cabin boy to survive. Were they guilty of murder? The case explores the limits of necessity as a defence and the relationship between law, morality, and survival.',
     'Three shipwrecked sailors killed and ate a cabin boy after 20 days adrift. They were charged with murder. The Queen''s Bench Division held that necessity could not be a defence to murder. This case is fundamental to Nigerian jurisprudence for: (1) LAW vs MORALITY — Most people morally understand the survivors'' dilemma, yet the law condemned them; (2) NATURAL LAW — Would Aquinas or Fuller say a positive law that condemns a starving man for survival is not really law? (3) UTILITARIAN ANALYSIS — Bentham would calculate: 3 lives saved vs 1 lost = utility maximised; (4) HART-FULLER DEBATE — Fuller argued that an unjust law is not law at all (Radbruch formula); Hart said the law is what it is, even if unjust.',
     ARRAY['Jurisprudence', 'Law and Morality', 'Necessity', 'Natural Law', 'Hart-Fuller Debate', 'Utilitarianism']
-);
+)
+ON CONFLICT (citation) DO NOTHING;
 
 -- Mark some foundational cases as preview (visible without login)
 UPDATE cases SET is_preview = true WHERE citation IN (
