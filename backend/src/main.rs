@@ -6,9 +6,10 @@ mod workers;
 
 use axum::http::{Method, header};
 use axum::{Router, routing::get};
-use sqlx::postgres::PgPoolOptions;
+use sqlx::postgres::{PgConnectOptions, PgPoolOptions};
 use std::env;
 use std::net::SocketAddr;
+use std::str::FromStr;
 use tower_http::cors::{Any, CorsLayer};
 
 #[tokio::main]
@@ -19,9 +20,15 @@ async fn main() {
     let database_url = env::var("DATABASE_URL")
         .unwrap_or_else(|_| "postgres://postgres:postgres@localhost:5432/lexafrica".to_string());
 
+    // Configure connection options to disable prepared statement caching
+    // This resolves "prepared statement already exists" errors when using poolers like Supabase or Railway
+    let connection_options = PgConnectOptions::from_str(&database_url)
+        .expect("Invalid DATABASE_URL")
+        .statement_cache_capacity(0);
+
     let pool = PgPoolOptions::new()
         .max_connections(5)
-        .connect(&database_url)
+        .connect_with(connection_options)
         .await
         .expect("could not connect to database");
 
