@@ -66,3 +66,4 @@ The backend includes an automatic AI summarization worker that runs in the backg
 ## License
 
 ISC
+# lexafrica
