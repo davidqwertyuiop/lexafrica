@@ -51,6 +51,7 @@ async fn main() {
         .nest("/cases", api::cases::router())
         .nest("/courses", api::courses::router())
         .nest("/auth", api::auth::router())
+        .nest("/chat", api::chat::router())
         .with_state(state.clone());
 
     let app = Router::new()
