@@ -1,0 +1,10 @@
+[build]
+builder = "nixpacks"
+buildCommand = "cargo build --release"
+
+[deploy]
+startCommand = "./target/release/backend"
+healthcheckPath = "/api/cases"
+healthcheckTimeout = 100
+restartPolicyType = "on-failure"
+maxRestartCount = 3
