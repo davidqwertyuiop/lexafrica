@@ -11,8 +11,30 @@ import {
   Zap,
 } from "lucide-react";
 import Link from "next/link";
+import { useState, useEffect } from "react";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api";
 
 export default function Dashboard() {
+  const [cases, setCases] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchLatestCases = async () => {
+      try {
+        const response = await fetch(`${API_URL}/cases`);
+        if (response.ok) {
+          const data = await response.json();
+          setCases(data || []);
+        }
+      } catch (error) {
+        console.error("Dashboard failed to fetch cases:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchLatestCases();
+  }, []);
   return (
     <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-neutral-50 selection:bg-blue-600 selection:text-white">
       {/* Header */}
@@ -199,39 +221,24 @@ export default function Dashboard() {
                 </h2>
               </div>
               <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 overflow-hidden shadow-sm">
-                {[
-                  {
-                    title: "Donoghue v Stevenson",
-                    year: 1932,
-                    court: "House of Lords",
-                    tags: ["Tort", "Negligence"],
-                  },
-                  {
-                    title: "Carlill v Carbolic Smoke Ball Co",
-                    year: 1893,
-                    court: "Court of Appeal",
-                    tags: ["Contract", "Offer"],
-                  },
-                  {
-                    title: "Uwaifo v Uwaifo",
-                    year: 2013,
-                    court: "Supreme Court",
-                    tags: ["Family", "Property"],
-                  },
-                ].map((item, i) => (
+                {loading ? (
+                   <div className="p-8 flex justify-center">
+                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                   </div>
+                ) : cases.slice(0, 3).map((item, i) => (
                   <div
                     key={i}
-                    className={`p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 cursor-pointer transition-colors ${i !== 2 ? "border-b border-neutral-200 dark:border-neutral-800" : ""}`}
+                    className={`p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 cursor-pointer transition-colors ${i < 2 ? "border-b border-neutral-200 dark:border-neutral-800" : ""}`}
                   >
                     <div>
                       <h3 className="font-semibold text-lg text-blue-600">
-                        {item.title} [{item.year}]
+                        {item.title} {item.year ? `[${item.year}]` : ''}
                       </h3>
                       <p className="text-muted-foreground mt-1 text-sm">
-                        {item.court}
+                        {item.court || "Court"}
                       </p>
                       <div className="flex gap-2 mt-3">
-                        {item.tags.map((tag) => (
+                        {(item.tags || ["Legal"]).map((tag: any) => (
                           <span
                             key={tag}
                             className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400"
