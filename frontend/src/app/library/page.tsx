@@ -3,17 +3,53 @@
 import { motion } from "framer-motion";
 import { Search, Filter, BookOpen, ChevronRight, Bookmark } from "lucide-react";
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const MOCK_CASES = [
-  { id: 1, title: "Donoghue v Stevenson", year: 1932, court: "House of Lords", tags: ["Tort", "Negligence"], excerpt: "Established the modern concept of negligence and the neighbour principle." },
-  { id: 2, title: "Carlill v Carbolic Smoke Ball Co", year: 1893, court: "Court of Appeal", tags: ["Contract", "Offer"], excerpt: "Held that an advertisement containing certain terms to get a reward constituted a binding unilateral offer." },
-  { id: 3, title: "Uwaifo v Uwaifo", year: 2013, court: "Supreme Court", tags: ["Family", "Property"], excerpt: "Clarified the equitable principles around family property and inheritance rights." },
-  { id: 4, title: "Awolowo v Federal Minister of Internal Affairs", year: 1962, court: "High Court", tags: ["Constitutional", "Rights"], excerpt: "Landmark case on the right to legal representation of one's choice under the Nigerian Constitution." }
+  { id: "1", title: "Donoghue v Stevenson", year: 1932, court: "House of Lords", tags: ["Tort", "Negligence"], excerpt: "Established the modern concept of negligence and the neighbour principle." },
+  { id: "2", title: "Carlill v Carbolic Smoke Ball Co", year: 1893, court: "Court of Appeal", tags: ["Contract", "Offer"], excerpt: "Held that an advertisement containing certain terms to get a reward constituted a binding unilateral offer." },
+  { id: "3", title: "Uwaifo v Uwaifo", year: 2013, court: "Supreme Court", tags: ["Family", "Property"], excerpt: "Clarified the equitable principles around family property and inheritance rights." },
+  { id: "4", title: "Awolowo v Federal Minister of Internal Affairs", year: 1962, court: "High Court", tags: ["Constitutional", "Rights"], excerpt: "Landmark case on the right to legal representation of one's choice under the Nigerian Constitution." }
 ];
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api";
 
 export default function CaseLibrary() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [cases, setCases] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCases = async () => {
+      try {
+        const response = await fetch(`${API_URL}/cases`);
+        if (response.ok) {
+          const data = await response.json();
+          // Map backend cases to match the frontend search UI if necessary
+          // For now, if we have data, use it; otherwise use mock
+          if (data && data.length > 0) {
+            setCases(data);
+          } else {
+            setCases(MOCK_CASES);
+          }
+        } else {
+          setCases(MOCK_CASES);
+        }
+      } catch (error) {
+        console.error("Failed to fetch cases:", error);
+        setCases(MOCK_CASES);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCases();
+  }, []);
+
+  const filteredCases = cases.filter(c => 
+    c.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    (c.tags && c.tags.some((t: string) => t.toLowerCase().includes(searchQuery.toLowerCase())))
+  );
 
   return (
     <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-neutral-50">
@@ -78,7 +114,7 @@ export default function CaseLibrary() {
           <div className="flex items-center justify-between">
             <h1 className="text-3xl font-extrabold tracking-tight">Case Law Library</h1>
             <span className="bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-400 text-xs font-semibold px-2.5 py-1 rounded-full">
-              2,450 Cases
+              {loading ? "..." : `${filteredCases.length} Cases`}
             </span>
           </div>
 
@@ -96,7 +132,11 @@ export default function CaseLibrary() {
           </div>
 
           <div className="space-y-4">
-            {MOCK_CASES.map((item, i) => (
+            {loading ? (
+               <div className="flex items-center justify-center py-12">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+               </div>
+            ) : filteredCases.map((item, i) => (
               <motion.div 
                 key={item.id}
                 initial={{ opacity: 0, y: 10 }}
@@ -106,19 +146,19 @@ export default function CaseLibrary() {
               >
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <h2 className="text-xl font-bold text-blue-600 group-hover:underline">{item.title} [{item.year}]</h2>
+                    <h2 className="text-xl font-bold text-blue-600 group-hover:underline">{item.title} {item.year ? `[${item.year}]` : ''}</h2>
                     <span className="px-2 py-0.5 rounded text-xs font-medium bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400">
-                      {item.court}
+                      {item.court || 'Court'}
                     </span>
                   </div>
                   
                   <p className="text-neutral-700 dark:text-neutral-300 text-sm mb-4 leading-relaxed line-clamp-2">
-                    <span className="font-semibold text-neutral-900 dark:text-white mr-1">AI Excerpt:</span> 
-                    {item.excerpt}
+                    <span className="font-semibold text-neutral-900 dark:text-white mr-1">AI Summary:</span> 
+                    {item.summary || item.excerpt || 'No summary available.'}
                   </p>
 
                   <div className="flex gap-2">
-                    {item.tags.map(tag => (
+                    {(item.tags || []).map((tag: any) => (
                       <span key={tag} className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400">
                         {tag}
                       </span>
