@@ -213,7 +213,7 @@ export default function Dashboard() {
               </div>
               <div>
                 <p className="font-semibold text-lg">Active Session</p>
-                <p className="text-blue-100 text-sm">Authentication secured by Supabase</p>
+                <p className="text-blue-100 text-sm">End-to-end encrypted session</p>
               </div>
             </motion.div>
           )}

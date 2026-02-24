@@ -29,25 +29,68 @@ export default function LexaChat() {
     setMessages((prev) => [...prev, { role: "user", text: userMessage }]);
     setLoading(true);
 
+    // Try the Render backend first, fall back to direct Gemini API call
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000); // 8s timeout
+
       const response = await fetch(`${API_URL}/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: userMessage }),
+        signal: controller.signal,
       });
+      clearTimeout(timeoutId);
 
       if (response.ok) {
         const data = await response.json();
         setMessages((prev) => [...prev, { role: "bot", text: data.response }]);
-      } else {
-        throw new Error("Failed to reach LEXA");
+        return;
       }
-    } catch (error) {
-      setMessages((prev) => [...prev, { role: "bot", text: "LEXA is currently updating her legal scrolls. Please try again in a moment." }]);
+      // If backend responded but with error, fall through to direct API
+    } catch {
+      // Backend unreachable, try direct Gemini call below
+    }
+
+    // Direct Gemini API fallback
+    try {
+      const geminiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+      if (!geminiKey) {
+        setMessages((prev) => [...prev, { role: "bot", text: "I'm having trouble connecting right now. Please check that the API is running and your environment variables are set (NEXT_PUBLIC_GEMINI_API_KEY or NEXT_PUBLIC_API_URL)." }]);
+        return;
+      }
+
+      const systemPrompt = `You are LEXA, a sophisticated legal AI assistant dedicated to helping Nigerian and African law students. \
+Provide clear, authoritative, educational explanations of legal concepts, case law and statutes. \
+Be precise, cite specific cases where possible, and use a professional but encouraging tutor-like tone.`;
+
+      const geminiRes = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: `${systemPrompt}\n\nStudent question: ${userMessage}` }] }],
+          }),
+        }
+      );
+
+      if (geminiRes.ok) {
+        const data = await geminiRes.json();
+        const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (text) {
+          setMessages((prev) => [...prev, { role: "bot", text }]);
+          return;
+        }
+      }
+      throw new Error("Gemini API returned no response");
+    } catch (err: any) {
+      setMessages((prev) => [...prev, { role: "bot", text: `I encountered an error: ${err?.message || "Unknown error"}. Please ensure NEXT_PUBLIC_API_URL is set correctly in Vercel to your Render backend URL.` }]);
     } finally {
       setLoading(false);
     }
   };
+
 
   return (
     <>
