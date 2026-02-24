@@ -13,9 +13,11 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@supabase/supabase-js": "^2.97.0",
     "@tailwindcss/postcss": "^4.2.1",
     "autoprefixer": "^10.4.24",
     "clsx": "^2.1.1",
+    "cookie": "^1.1.1",
     "framer-motion": "^12.34.3",
     "lucide-react": "^0.575.0",
     "next": "^16.1.6",

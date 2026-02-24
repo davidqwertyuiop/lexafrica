@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Search, Filter, BookOpen, ChevronRight, Bookmark } from "lucide-react";
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+import AuthGuard from "@/components/AuthGuard";
 
 const MOCK_CASES = [
   { id: "1", title: "Donoghue v Stevenson", year: 1932, court: "House of Lords", tags: ["Tort", "Negligence"], excerpt: "Established the modern concept of negligence and the neighbour principle." },
@@ -59,7 +60,8 @@ export default function CaseLibrary() {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-neutral-50">
+    <AuthGuard>
+      <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-neutral-50">
       {/* Header */}
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container px-4 h-16 max-w-7xl mx-auto flex items-center justify-between">
@@ -193,5 +195,6 @@ export default function CaseLibrary() {
         </div>
       </main>
     </div>
+    </AuthGuard>
   );
 }

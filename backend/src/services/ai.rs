@@ -117,10 +117,12 @@ impl AiService {
 
         if res.status().is_success() {
             let parsed: GeminiResponse = res.json().await?;
-            if let Some(candidate) = parsed.candidates.first() {
-                if let Some(part) = candidate.content.parts.first() {
-                    return Ok(part.text.clone());
-                }
+            if let Some(part) = parsed
+                .candidates
+                .first()
+                .and_then(|c| c.content.parts.first())
+            {
+                return Ok(part.text.clone());
             }
             Err("Unexpected response structure from Gemini API".into())
         } else {
