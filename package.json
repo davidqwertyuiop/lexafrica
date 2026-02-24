@@ -11,5 +11,8 @@
     "build": "npm run build --prefix frontend",
     "start": "npm run start --prefix frontend",
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "devDependencies": {
+    "supabase": "^2.76.14"
   }
 }
