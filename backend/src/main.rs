@@ -6,6 +6,7 @@ mod workers;
 
 use axum::http::{Method, header};
 use axum::{Router, routing::get};
+use sqlx::Connection;
 use sqlx::postgres::{PgConnectOptions, PgPoolOptions};
 use std::env;
 use std::net::SocketAddr;
@@ -26,17 +27,28 @@ async fn main() {
         .expect("Invalid DATABASE_URL")
         .statement_cache_capacity(0);
 
+    // Run migrations on a single connection first to ensure strict cache disabling
+    // sqlx migrations sometimes use separate connections, so we run it manually here
+    println!("Running database migrations...");
+    let mut conn = sqlx::postgres::PgConnection::connect_with(&connection_options)
+        .await
+        .expect("Failed to connect for migrations");
+
+    sqlx::migrate!("../supabase/migrations")
+        .run(&mut conn)
+        .await
+        .expect("Failed to run migrations");
+
+    // Explicitly drop migration connection before starting pool
+    drop(conn);
+
     let pool = PgPoolOptions::new()
         .max_connections(5)
         .connect_with(connection_options)
         .await
         .expect("could not connect to database");
 
-    // Run migrations automatically
-    sqlx::migrate!("../supabase/migrations")
-        .run(&pool)
-        .await
-        .expect("Failed to run migrations");
+    println!("Database migrations completed successfully.");
 
     let state = models::db::AppState { db: pool };
 
