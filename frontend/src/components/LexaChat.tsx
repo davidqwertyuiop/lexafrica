@@ -1,18 +1,18 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
-import { MessageSquare, Send, X, Bot, User, Loader2 } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { MessageSquare, Send, X, User, Bot, Loader2 } from "lucide-react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api";
 
 export default function LexaChat() {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<{ role: "user" | "lexa"; content: string }[]>([
-    { role: "lexa", content: "Hello! I am LEXA, your legal learning assistant. How can I help you with Nigerian or African law today?" }
+  const [messages, setMessages] = useState<{ role: "user" | "bot"; text: string }[]>([
+    { role: "bot", text: "Hello! I am LEXA, your legal AI assistant. How can I help you today?" }
   ]);
   const [input, setInput] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -22,12 +22,12 @@ export default function LexaChat() {
   }, [messages]);
 
   const handleSend = async () => {
-    if (!input.trim() || isLoading) return;
+    if (!input.trim() || loading) return;
 
     const userMessage = input.trim();
     setInput("");
-    setMessages((prev) => [...prev, { role: "user", content: userMessage }]);
-    setIsLoading(true);
+    setMessages((prev) => [...prev, { role: "user", text: userMessage }]);
+    setLoading(true);
 
     try {
       const response = await fetch(`${API_URL}/chat`, {
@@ -36,112 +36,107 @@ export default function LexaChat() {
         body: JSON.stringify({ message: userMessage }),
       });
 
-      if (!response.ok) throw new Error("Failed to reach LEXA");
-
-      const data = await response.json();
-      setMessages((prev) => [...prev, { role: "lexa", content: data.response }]);
+      if (response.ok) {
+        const data = await response.json();
+        setMessages((prev) => [...prev, { role: "bot", text: data.response }]);
+      } else {
+        throw new Error("Failed to reach LEXA");
+      }
     } catch (error) {
-      setMessages((prev) => [
-        ...prev,
-        { role: "lexa", content: "I'm sorry, I'm having trouble connecting to my knowledge base right now. Please try again in a moment." }
-      ]);
+      setMessages((prev) => [...prev, { role: "bot", text: "LEXA is currently updating her legal scrolls. Please try again in a moment." }]);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
+    <>
+      {/* Floating Toggle Button */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="fixed bottom-6 right-6 p-4 rounded-2xl bg-blue-600 text-white shadow-2xl hover:bg-blue-700 transition-all z-50 group"
+      >
+        {isOpen ? <X className="w-6 h-6" /> : <MessageSquare className="w-6 h-6" />}
+        {!isOpen && (
+          <span className="absolute right-full mr-4 bg-white dark:bg-neutral-900 border border-border px-3 py-1.5 rounded-lg text-sm text-neutral-900 dark:text-neutral-50 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity hidden md:block">
+            Ask LEXA AI
+          </span>
+        )}
+      </button>
+
+      {/* Chat Window */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="mb-4 flex h-[500px] w-[350px] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl md:w-[400px]"
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            className="fixed bottom-24 right-6 w-[90vw] md:w-[400px] h-[60vh] bg-white dark:bg-neutral-900 rounded-3xl border border-border shadow-2xl flex flex-col z-50 overflow-hidden"
           >
             {/* Header */}
-            <div className="flex items-center justify-between bg-primary px-4 py-3 text-primary-foreground">
+            <div className="p-4 border-b border-border bg-blue-600 text-white flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20">
-                  <Bot size={18} />
+                <div className="bg-white/20 p-1.5 rounded-lg">
+                  <Bot className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold">LEXA AI</h3>
-                  <p className="text-[10px] opacity-80">Legal Learning Assistant</p>
+                  <h3 className="font-bold text-sm">LEXA Legal Assistant</h3>
+                  <p className="text-[10px] text-blue-100">Nigerian Law Specialist</p>
                 </div>
               </div>
-              <button
-                onClick={() => setIsOpen(false)}
-                className="rounded-full p-1 transition-colors hover:bg-white/10"
-              >
-                <X size={18} />
+              <button onClick={() => setIsOpen(false)} className="hover:bg-white/10 p-1.5 rounded-lg">
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            {/* Messages */}
-            <div
-              ref={scrollRef}
-              className="flex-1 overflow-y-auto p-4 space-y-4 bg-background/50"
-            >
+            {/* Chat Messages */}
+            <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
               {messages.map((msg, i) => (
-                <div
-                  key={i}
-                  className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-                >
-                  <div
-                    className={`max-w-[85%] rounded-2xl px-4 py-2 text-sm shadow-sm ${
-                      msg.role === "user"
-                        ? "bg-primary text-primary-foreground rounded-tr-none"
-                        : "bg-muted text-foreground rounded-tl-none border border-border"
-                    }`}
-                  >
-                    {msg.content}
+                <div key={i} className={`flex gap-3 ${msg.role === "user" ? "flex-row-reverse" : "flex-row"}`}>
+                  <div className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${msg.role === "user" ? "bg-blue-600" : "bg-neutral-200 dark:bg-neutral-800"}`}>
+                    {msg.role === "user" ? <User className="w-4 h-4 text-white" /> : <Bot className="w-4 h-4 text-blue-600" />}
+                  </div>
+                  <div className={`p-3 rounded-2xl text-sm max-w-[80%] ${msg.role === "user" ? "bg-blue-600 text-white rounded-tr-none" : "bg-neutral-100 dark:bg-neutral-800 rounded-tl-none"}`}>
+                    {msg.text}
                   </div>
                 </div>
               ))}
-              {isLoading && (
-                <div className="flex justify-start">
-                  <div className="flex items-center gap-2 rounded-2xl bg-muted px-4 py-2 text-sm border border-border rounded-tl-none">
-                    <Loader2 size={14} className="animate-spin text-primary" />
-                    <span className="text-muted-foreground italic">LEXA is thinking...</span>
+              {loading && (
+                <div className="flex gap-3">
+                  <div className="shrink-0 w-8 h-8 rounded-full bg-neutral-200 dark:bg-neutral-800 flex items-center justify-center">
+                    <Bot className="w-4 h-4 text-blue-600" />
+                  </div>
+                  <div className="p-3 rounded-2xl text-sm bg-neutral-100 dark:bg-neutral-800 rounded-tl-none flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span className="animate-pulse">Analyzing...</span>
                   </div>
                 </div>
               )}
             </div>
 
             {/* Input */}
-            <div className="border-t border-border p-3 bg-card">
-              <div className="flex items-center gap-2 overflow-hidden rounded-xl border border-border bg-background px-3 py-1 focus-within:ring-1 focus-within:ring-primary">
+            <div className="p-4 border-t border-border">
+              <div className="relative">
                 <input
                   type="text"
-                  placeholder="Ask LEXA about law..."
-                  className="flex-1 bg-transparent py-2 text-sm outline-none placeholder:text-muted-foreground"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleSend()}
+                  onKeyPress={(e) => e.key === "Enter" && handleSend()}
+                  placeholder="Ask a legal question..."
+                  className="w-full pl-4 pr-12 py-3 rounded-xl bg-neutral-100 dark:bg-neutral-800 border-transparent focus:ring-2 focus:ring-blue-600 outline-none text-sm transition-all"
                 />
                 <button
                   onClick={handleSend}
-                  disabled={isLoading || !input.trim()}
-                  className="text-primary transition-opacity hover:opacity-80 disabled:opacity-30"
+                  disabled={!input.trim() || loading}
+                  className="absolute right-2 top-1.5 p-1.5 rounded-full bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 transition-colors"
                 >
-                  <Send size={18} />
+                  <Send className="w-4 h-4" />
                 </button>
               </div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
-
-      <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg ring-4 ring-primary/20 transition-all hover:shadow-primary/20"
-      >
-        {isOpen ? <X size={24} /> : <MessageSquare size={24} />}
-      </motion.button>
-    </div>
+    </>
   );
 }

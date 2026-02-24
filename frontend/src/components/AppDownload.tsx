@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Smartphone, Apple, PlayCircle, Download } from "lucide-react";
+import { Smartphone, Apple, PlayCircle, Download, Bot } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function AppDownload() {
@@ -61,5 +61,3 @@ export default function AppDownload() {
     </section>
   );
 }
-
-import { Bot } from "lucide-react";

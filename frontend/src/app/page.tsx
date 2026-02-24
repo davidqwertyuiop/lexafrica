@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
   BookOpen,
@@ -17,13 +17,88 @@ import { useState, useEffect } from "react";
 import AppDownload from "@/components/AppDownload";
 import { useAuth } from "@/components/AuthGuard";
 import { supabase } from "@/lib/supabase";
+import LexaChat from "@/components/LexaChat";
+import OnboardingModal from "@/components/OnboardingModal";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api";
 
 export default function Dashboard() {
-  const { user, loading: authLoading, signOut } = useAuth();
+  const { user, loading: authLoading, signOut, session } = useAuth();
   const [cases, setCases] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [userProfile, setUserProfile] = useState<any>(null);
+
+  useEffect(() => {
+    const syncAndFetchProfile = async () => {
+      if (!user || !session) return;
+
+      try {
+        const response = await fetch(`${API_URL}/auth/sync`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${session.access_token}`
+          },
+          body: JSON.stringify({
+            email: user.email,
+            full_name: user.user_metadata?.full_name,
+            avatar_url: user.user_metadata?.avatar_url,
+          }),
+        });
+
+        if (response.ok) {
+          const profile = await response.json();
+          setUserProfile(profile);
+          // If role is default or missing, show onboarding
+          if (!profile.role || profile.role === 'student') {
+             // We can check if it was literally just created or just check role
+             // For now, let's show onboarding if it's the first time they land and role is not confirmed
+             // To avoid annoying them, maybe check a 'first_time' flag or just let them re-select once
+             const hasSetRole = localStorage.getItem(`lexa_role_set_${user.id}`);
+             if (!hasSetRole) {
+               setShowOnboarding(true);
+             }
+          }
+        }
+      } catch (error) {
+        console.error("Sync failed:", error);
+      }
+    };
+
+    if (user && session) {
+      syncAndFetchProfile();
+    }
+  }, [user, session]);
+
+  const handleRoleSelection = async (role: string) => {
+     if (!user || !session) return;
+     
+     try {
+       const response = await fetch(`${API_URL}/auth/sync`, {
+         method: "POST",
+         headers: {
+           "Content-Type": "application/json",
+           "Authorization": `Bearer ${session.access_token}`
+         },
+         body: JSON.stringify({
+           email: user.email,
+           full_name: user.user_metadata?.full_name,
+           avatar_url: user.user_metadata?.avatar_url,
+           role: role
+         }),
+       });
+
+       if (response.ok) {
+         const profile = await response.json();
+         setUserProfile(profile);
+         setShowOnboarding(false);
+         localStorage.setItem(`lexa_role_set_${user.id}`, 'true');
+       }
+     } catch (error) {
+       console.error("Role update failed:", error);
+     }
+  };
 
   useEffect(() => {
     const fetchLatestCases = async () => {
@@ -74,6 +149,7 @@ export default function Dashboard() {
           <nav className="hidden md:flex items-center gap-8 text-sm font-medium">
             <Link href="/" className="text-blue-600">Dashboard</Link>
             <Link href="/library" className="text-muted-foreground hover:text-foreground transition-colors">Case Library</Link>
+            <Link href="/statutes/nigerian-constitution" className="text-muted-foreground hover:text-foreground transition-colors font-bold">Nigerian Constitution</Link>
             <Link href="/courses" className="text-muted-foreground hover:text-foreground transition-colors">Courses</Link>
             <Link href="/prep" className="text-muted-foreground hover:text-foreground transition-colors">Exam Prep</Link>
           </nav>
@@ -242,6 +318,16 @@ export default function Dashboard() {
         {/* App Download Section */}
         <AppDownload />
       </main>
+
+      {/* Floating AI Assistant */}
+      <LexaChat />
+
+      {/* Role Selection Onboarding */}
+      <AnimatePresence>
+        {showOnboarding && (
+          <OnboardingModal onSelect={handleRoleSelection} />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

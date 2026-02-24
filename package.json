@@ -6,13 +6,19 @@
   "author": "",
   "type": "commonjs",
   "main": "index.js",
+  "workspaces": [
+    "./frontend"
+  ],
   "scripts": {
-    "dev": "npm run dev --prefix frontend",
-    "build": "npm run build --prefix frontend",
-    "start": "npm run start --prefix frontend",
+    "dev": "npm run dev -w frontend",
+    "build": "npm run build -w frontend",
+    "start": "npm run start -w frontend",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "devDependencies": {
     "supabase": "^2.76.14"
+  },
+  "dependencies": {
+    "next": "^16.0.7"
   }
 }

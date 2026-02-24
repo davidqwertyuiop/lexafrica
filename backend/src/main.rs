@@ -25,6 +25,12 @@ async fn main() {
         .await
         .expect("could not connect to database");
 
+    // Run migrations automatically
+    sqlx::migrate!("../supabase/migrations")
+        .run(&pool)
+        .await
+        .expect("Failed to run migrations");
+
     let state = models::db::AppState { db: pool };
 
     // Spawn the AI summarization worker as a background task
