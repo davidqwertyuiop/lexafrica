@@ -149,7 +149,7 @@ export default function Dashboard() {
           <nav className="hidden md:flex items-center gap-8 text-sm font-medium">
             <Link href="/" className="text-blue-600">Dashboard</Link>
             <Link href="/library" className="text-muted-foreground hover:text-foreground transition-colors">Case Library</Link>
-            <Link href="/statutes/nigerian-constitution" className="text-muted-foreground hover:text-foreground transition-colors font-bold">Nigerian Constitution</Link>
+            <a href="https://nigerian-constitution.com/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors font-bold">Nigerian Constitution</a>
             <Link href="/courses" className="text-muted-foreground hover:text-foreground transition-colors">Courses</Link>
             <Link href="/prep" className="text-muted-foreground hover:text-foreground transition-colors">Exam Prep</Link>
           </nav>
@@ -157,7 +157,7 @@ export default function Dashboard() {
           <div className="flex items-center gap-4">
             {user ? (
               <div className="flex items-center gap-3">
-                <button onClick={signOut} className="text-sm font-medium text-muted-foreground hover:text-foreground">Sign Out</button>
+                <button onClick={signOut} className="text-sm font-medium text-muted-foreground hover:text-foreground">Log Out</button>
                 <div className="relative w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center overflow-hidden border border-blue-700 text-white font-bold">
                   {user.email?.[0].toUpperCase()}
                 </div>
@@ -167,7 +167,7 @@ export default function Dashboard() {
                 onClick={handleSignIn}
                 className="px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/20"
               >
-                Sign In
+                Login
               </button>
             )}
           </div>
@@ -197,7 +197,7 @@ export default function Dashboard() {
             >
               {user 
                 ? "Your preparation journey continues. You have 32 days left until the Bar Finals." 
-                : "Accessible, AI-powered legal education for the next generation of African lawyers. Sign in to start your journey."}
+                : "Accessible, AI-powered legal education for the next generation of African lawyers. Login to start your journey."}
             </motion.p>
           </div>
 
