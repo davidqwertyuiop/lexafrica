@@ -32,6 +32,9 @@ async fn main() {
 
     let state = models::db::AppState { db: pool };
 
+    // 👇 ADD THIS — starts the summarization worker in the background
+    tokio::spawn(workers::summarization_worker::start_summarization_worker(state.clone()));
+
     let cors = CorsLayer::new()
         .allow_origin(Any)
         .allow_methods([
@@ -63,6 +66,7 @@ async fn main() {
 
     let addr = SocketAddr::from(([0, 0, 0, 0], port));
     println!("listening on {}", addr);
+
     let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
     axum::serve(listener, app).await.unwrap();
 }
