@@ -32,11 +32,6 @@ async fn main() {
 
     let state = models::db::AppState { db: pool };
 
-    let worker_state = state.clone();
-    tokio::spawn(async move {
-        workers::ai_summarizer::start_summarization_worker(worker_state).await;
-    });
-
     let cors = CorsLayer::new()
         .allow_origin(Any)
         .allow_methods([

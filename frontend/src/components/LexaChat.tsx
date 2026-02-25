@@ -29,10 +29,10 @@ export default function LexaChat() {
     setMessages((prev) => [...prev, { role: "user", text: userMessage }]);
     setLoading(true);
 
-    // Try the Render backend first, fall back to direct Gemini API call
+    // Try the Render backend first
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 8000); // 8s timeout
+      const timeoutId = setTimeout(() => controller.abort(), 8000);
 
       const response = await fetch(`${API_URL}/chat`, {
         method: "POST",
@@ -47,16 +47,21 @@ export default function LexaChat() {
         setMessages((prev) => [...prev, { role: "bot", text: data.response }]);
         return;
       }
-      // If backend responded but with error, fall through to direct API
     } catch {
-      // Backend unreachable, try direct Gemini call below
+      // Backend unreachable, fall through to direct Gemini call
     }
 
     // Direct Gemini API fallback
     try {
       const geminiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
       if (!geminiKey) {
-        setMessages((prev) => [...prev, { role: "bot", text: "I'm having trouble connecting right now. Please check that the API is running and your environment variables are set (NEXT_PUBLIC_GEMINI_API_KEY or NEXT_PUBLIC_API_URL)." }]);
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "bot",
+            text: "I'm having trouble connecting right now. Please ensure NEXT_PUBLIC_GEMINI_API_KEY is set in your environment variables.",
+          },
+        ]);
         return;
       }
 
@@ -65,12 +70,20 @@ Provide clear, authoritative, educational explanations of legal concepts, case l
 Be precise, cite specific cases where possible, and use a professional but encouraging tutor-like tone.`;
 
       const geminiRes = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${geminiKey}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            contents: [{ parts: [{ text: `${systemPrompt}\n\nStudent question: ${userMessage}` }] }],
+            contents: [
+              {
+                parts: [
+                  {
+                    text: `${systemPrompt}\n\nStudent question: ${userMessage}`,
+                  },
+                ],
+              },
+            ],
           }),
         }
       );
@@ -85,12 +98,17 @@ Be precise, cite specific cases where possible, and use a professional but encou
       }
       throw new Error("Gemini API returned no response");
     } catch (err: any) {
-      setMessages((prev) => [...prev, { role: "bot", text: `I encountered an error: ${err?.message || "Unknown error"}. Please ensure NEXT_PUBLIC_API_URL is set correctly in Vercel to your Render backend URL.` }]);
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "bot",
+          text: `I encountered an error: ${err?.message || "Unknown error"}. Please ensure your API keys and backend URL are correctly configured.`,
+        },
+      ]);
     } finally {
       setLoading(false);
     }
   };
-
 
   return (
     <>
@@ -139,7 +157,7 @@ Be precise, cite specific cases where possible, and use a professional but encou
                   <div className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${msg.role === "user" ? "bg-blue-600" : "bg-neutral-200 dark:bg-neutral-800"}`}>
                     {msg.role === "user" ? <User className="w-4 h-4 text-white" /> : <Bot className="w-4 h-4 text-blue-600" />}
                   </div>
-                  <div className={`p-3 rounded-2xl text-sm max-w-[80%] ${msg.role === "user" ? "bg-blue-600 text-white rounded-tr-none" : "bg-neutral-100 dark:bg-neutral-800 rounded-tl-none"}`}>
+                  <div className={`p-3 rounded-2xl text-sm max-w-[80%] whitespace-pre-wrap ${msg.role === "user" ? "bg-blue-600 text-white rounded-tr-none" : "bg-neutral-100 dark:bg-neutral-800 rounded-tl-none"}`}>
                     {msg.text}
                   </div>
                 </div>

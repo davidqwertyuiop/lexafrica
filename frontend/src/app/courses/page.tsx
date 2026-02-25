@@ -32,7 +32,7 @@ export default function CourseHub() {
   const [activeTab, setActiveTab] = useState("all");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [subjects, setSubjects] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // For now we use the rich front-end SUBJECTS to fulfill the specific categories requested
