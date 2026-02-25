@@ -1,5 +1,9 @@
+use crate::models::db::AppState;
 use reqwest::Client;
 use serde_json::json;
+use sqlx::Row;
+use std::time::Duration;
+use tokio::time::sleep;
 
 pub struct AiService {
     client: Client,
@@ -59,5 +63,61 @@ impl AiService {
             .to_string();
 
         Ok(text)
+    }
+}
+
+pub async fn start_summarization_worker(state: AppState) {
+    println!("Starting AI Summarization Worker...");
+    let ai_service = AiService::new();
+
+    loop {
+        let case_to_summarize = sqlx::query(
+            "SELECT id, content FROM cases WHERE summary IS NULL ORDER BY created_at ASC LIMIT 1",
+        )
+        .fetch_optional(&state.db)
+        .await;
+
+        match case_to_summarize {
+            Ok(Some(row)) => {
+                let id: uuid::Uuid = row.get("id");
+                let content: String = row.get("content");
+                println!("Worker found case to summarize: {}", id);
+
+                match ai_service.summarize_case(&content).await {
+                    Ok(summary) => {
+                        let update_result = sqlx::query(
+                            "UPDATE cases SET summary = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2"
+                        )
+                        .bind(summary)
+                        .bind(id)
+                        .execute(&state.db)
+                        .await;
+
+                        match update_result {
+                            Ok(_) => println!("Successfully summarized and saved case: {}", id),
+                            Err(e) => eprintln!("Failed to save summary for case {}: {}", id, e),
+                        }
+                    }
+                    Err(e) => {
+                        eprintln!("AI Summarization failed for case {}: {}", id, e);
+                        let _ = sqlx::query(
+                            "UPDATE cases SET summary = 'ERROR: Summarization failed', updated_at = CURRENT_TIMESTAMP WHERE id = $1"
+                        )
+                        .bind(id)
+                        .execute(&state.db)
+                        .await;
+                    }
+                }
+            }
+            Ok(None) => {
+                sleep(Duration::from_secs(30)).await;
+            }
+            Err(e) => {
+                eprintln!("Database error in summarization worker: {}", e);
+                sleep(Duration::from_secs(60)).await;
+            }
+        }
+
+        sleep(Duration::from_secs(2)).await;
     }
 }

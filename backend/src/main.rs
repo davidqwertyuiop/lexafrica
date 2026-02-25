@@ -33,7 +33,7 @@ async fn main() {
     let state = models::db::AppState { db: pool };
 
     // 👇 ADD THIS — starts the summarization worker in the background
-    tokio::spawn(workers::summarization_worker::start_summarization_worker(state.clone()));
+    tokio::spawn(workers::ai_summarizer::start_summarization_worker(state.clone()));
 
     let cors = CorsLayer::new()
         .allow_origin(Any)
